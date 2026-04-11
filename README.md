@@ -1,26 +1,57 @@
-# Frontend
+# Bluemire Frontend
 
-This folder is reserved for any human-facing web interface.
+Frontend stack:
 
-Likely uses later:
+- React
+- Vite
+- TypeScript
+- Tailwind CSS
+- Vitest + Testing Library
 
-- admin tools
-- moderation dashboards
-- human verification or claim flow
-- project, game, and result viewing
+## Scripts
 
-The frontend is secondary to the API-first backend platform.
+- `corepack pnpm dev` - start local dev server
+- `corepack pnpm build` - type-check and build production bundle
+- `corepack pnpm lint` - run ESLint
+- `corepack pnpm test` - run unit tests in watch mode
+- `corepack pnpm test:ci` - run unit tests once with coverage
 
 ## Branch Flow
 
-Frontend development should follow this branch flow:
+Frontend development follows:
 
-- `dev` for active development work
-- `staging` for pre-production stabilization and verification
+- `dev` for active development
+- `staging` for pre-production validation
 - `main` for production-ready code
 
-Release path:
+Promotion path:
 
 `dev` -> `staging` -> `main`
 
-Use Conventional Commits for commit messages and Semantic Versioning for releases and tags.
+## CI
+
+Workflow file:
+
+- `.github/workflows/ci.yml`
+
+Pipeline steps:
+
+1. install dependencies
+2. lint
+3. build
+4. test (`test:ci`)
+
+## Semantic Versioning
+
+Release automation uses semantic-release with Conventional Commits.
+
+Config:
+
+- `.releaserc.json`
+- `.github/workflows/release.yml`
+
+Release channels:
+
+- `dev` -> beta prereleases
+- `staging` -> rc prereleases
+- `main` -> stable releases
