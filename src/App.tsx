@@ -112,8 +112,14 @@ function App() {
   }
 
   async function onCreateWorkspace() {
+    const projectId = workspaceProjectId.trim()
+    if (!projectId) {
+      setError(new Error('Project ID is required before workspace actions.'))
+      return
+    }
+
     try {
-      const response = await createWorkspace(workspaceProjectId)
+      const response = await createWorkspace(projectId)
       setWorkspaceResponse(JSON.stringify(response, null, 2))
       setSuccess('Workspace created or fetched.')
     } catch (error) {
@@ -123,8 +129,16 @@ function App() {
 
   async function onWriteWorkspaceFile(event: FormEvent) {
     event.preventDefault()
+
+    const projectId = workspaceProjectId.trim()
+    const filePath = workspacePath.trim()
+    if (!projectId || !filePath) {
+      setError(new Error('Workspace project ID and file path are required.'))
+      return
+    }
+
     try {
-      const response = await writeWorkspaceFile(workspaceProjectId, workspacePath, workspaceContent)
+      const response = await writeWorkspaceFile(projectId, filePath, workspaceContent)
       setWorkspaceResponse(JSON.stringify(response, null, 2))
       setSuccess('Workspace file written.')
     } catch (error) {
@@ -133,8 +147,14 @@ function App() {
   }
 
   async function onListWorkspaceFiles() {
+    const projectId = workspaceProjectId.trim()
+    if (!projectId) {
+      setError(new Error('Project ID is required before listing workspace files.'))
+      return
+    }
+
     try {
-      const response = await listWorkspaceFiles(workspaceProjectId)
+      const response = await listWorkspaceFiles(projectId)
       setWorkspaceResponse(JSON.stringify(response, null, 2))
       setSuccess('Workspace files listed.')
     } catch (error) {
@@ -143,8 +163,14 @@ function App() {
   }
 
   async function onValidateWorkspace() {
+    const projectId = workspaceProjectId.trim()
+    if (!projectId) {
+      setError(new Error('Project ID is required before workspace validation.'))
+      return
+    }
+
     try {
-      const response = await validateWorkspace(workspaceProjectId)
+      const response = await validateWorkspace(projectId)
       setWorkspaceResponse(JSON.stringify(response, null, 2))
       setSuccess('Workspace validation completed.')
     } catch (error) {
@@ -194,18 +220,33 @@ function App() {
           <article className="rounded-xl border border-slate-200 p-4">
             <h3 className="text-sm font-semibold text-slate-900">Agent</h3>
             <form className="mt-3 space-y-3" onSubmit={onRegisterAgent}>
-              <input
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                value={agentName}
-                onChange={(event) => setAgentName(event.target.value)}
-                placeholder="Agent name"
-              />
-              <input
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                value={agentDescription}
-                onChange={(event) => setAgentDescription(event.target.value)}
-                placeholder="Agent description"
-              />
+              <div className="space-y-1">
+                <label htmlFor="agent-name" className="block text-xs font-medium text-slate-700">
+                  Agent Name
+                </label>
+                <input
+                  id="agent-name"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  value={agentName}
+                  onChange={(event) => setAgentName(event.target.value)}
+                  placeholder="Agent name"
+                />
+              </div>
+              <div className="space-y-1">
+                <label
+                  htmlFor="agent-description"
+                  className="block text-xs font-medium text-slate-700"
+                >
+                  Agent Description
+                </label>
+                <input
+                  id="agent-description"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  value={agentDescription}
+                  onChange={(event) => setAgentDescription(event.target.value)}
+                  placeholder="Agent description"
+                />
+              </div>
               <div className="flex gap-2">
                 <button
                   type="submit"
@@ -230,19 +271,38 @@ function App() {
           <article className="rounded-xl border border-slate-200 p-4">
             <h3 className="text-sm font-semibold text-slate-900">Projects</h3>
             <form className="mt-3 space-y-3" onSubmit={onCreateProject}>
-              <input
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                value={projectName}
-                onChange={(event) => setProjectName(event.target.value)}
-                placeholder="Project name"
-              />
-              <input
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                value={projectDescription}
-                onChange={(event) => setProjectDescription(event.target.value)}
-                placeholder="Project description"
-              />
+              <div className="space-y-1">
+                <label htmlFor="project-name" className="block text-xs font-medium text-slate-700">
+                  Project Name
+                </label>
+                <input
+                  id="project-name"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  value={projectName}
+                  onChange={(event) => setProjectName(event.target.value)}
+                  placeholder="Project name"
+                />
+              </div>
+              <div className="space-y-1">
+                <label
+                  htmlFor="project-description"
+                  className="block text-xs font-medium text-slate-700"
+                >
+                  Project Description
+                </label>
+                <input
+                  id="project-description"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  value={projectDescription}
+                  onChange={(event) => setProjectDescription(event.target.value)}
+                  placeholder="Project description"
+                />
+              </div>
+              <label htmlFor="project-type" className="block text-xs font-medium text-slate-700">
+                Project Type
+              </label>
               <select
+                id="project-type"
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 value={projectType}
                 onChange={(event) => setProjectType(event.target.value as 'game' | 'strategy' | 'hybrid')}
@@ -275,12 +335,21 @@ function App() {
           <article className="rounded-xl border border-slate-200 p-4">
             <h3 className="text-sm font-semibold text-slate-900">Workspace</h3>
             <div className="mt-3 space-y-3">
-              <input
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                value={workspaceProjectId}
-                onChange={(event) => setWorkspaceProjectId(event.target.value)}
-                placeholder="Project ID"
-              />
+              <div className="space-y-1">
+                <label
+                  htmlFor="workspace-project-id"
+                  className="block text-xs font-medium text-slate-700"
+                >
+                  Workspace Project ID
+                </label>
+                <input
+                  id="workspace-project-id"
+                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  value={workspaceProjectId}
+                  onChange={(event) => setWorkspaceProjectId(event.target.value)}
+                  placeholder="Project ID"
+                />
+              </div>
               <button
                 type="button"
                 onClick={onCreateWorkspace}
@@ -289,14 +358,26 @@ function App() {
                 Create Workspace
               </button>
               <form className="space-y-2" onSubmit={onWriteWorkspaceFile}>
+                <label htmlFor="workspace-path" className="block text-xs font-medium text-slate-700">
+                  Workspace File Path
+                </label>
                 <input
+                  id="workspace-path"
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                   value={workspacePath}
                   onChange={(event) => setWorkspacePath(event.target.value)}
                   placeholder="File path"
                 />
+                <label
+                  htmlFor="workspace-content"
+                  className="block text-xs font-medium text-slate-700"
+                >
+                  Workspace Content
+                </label>
                 <textarea
+                  id="workspace-content"
                   className="h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                  aria-label="Workspace content"
                   value={workspaceContent}
                   onChange={(event) => setWorkspaceContent(event.target.value)}
                 />

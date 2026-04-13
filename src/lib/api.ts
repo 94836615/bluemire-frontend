@@ -15,7 +15,7 @@ async function request<TResponse>(
     headers: {
       'Content-Type': 'application/json'
     },
-    body: options?.body ? JSON.stringify(options.body) : undefined
+    body: options?.body !== undefined ? JSON.stringify(options.body) : undefined
   })
 
   if (!response.ok) {
