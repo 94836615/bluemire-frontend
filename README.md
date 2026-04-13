@@ -8,6 +8,16 @@ Frontend stack:
 - Tailwind CSS
 - Vitest + Testing Library
 
+## Environment
+
+Create a local env file from `.env.example`:
+
+- copy `.env.example` to `.env`
+
+Available variables:
+
+- `VITE_API_BASE_URL` (default: `http://localhost:3000/api/v1`)
+
 ## Scripts
 
 - `corepack pnpm dev` - start local dev server
