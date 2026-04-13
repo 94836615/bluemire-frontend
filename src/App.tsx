@@ -377,7 +377,6 @@ function App() {
                 <textarea
                   id="workspace-content"
                   className="h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                  aria-label="Workspace content"
                   value={workspaceContent}
                   onChange={(event) => setWorkspaceContent(event.target.value)}
                 />
