@@ -303,7 +303,9 @@ function App() {
     try {
       const response = await getRunLogs(runId)
       setRunLogs(response.logs)
-      setRunLogsResponse(JSON.stringify(response, null, 2))
+      if (!options?.silent) {
+        setRunLogsResponse(JSON.stringify(response, null, 2))
+      }
       if (!options?.silent) {
         setSuccess('Run logs fetched.')
       }
