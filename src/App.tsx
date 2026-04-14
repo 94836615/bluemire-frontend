@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import {
@@ -15,12 +15,13 @@ import {
   listWorkspaceFiles,
   registerAgent,
   type JsonValue,
+  type RunResource,
   validateWorkspace,
   writeWorkspaceFile
 } from './lib/api'
 
 type StatusKind = 'idle' | 'success' | 'error'
-type RunStatus = 'queued' | 'building' | 'testing' | 'ready' | 'failed'
+type RunStatus = RunResource['status']
 
 function App() {
   const [audience, setAudience] = useState<'human' | 'agent'>('human')
@@ -65,6 +66,14 @@ function App() {
   const [activeRunId, setActiveRunId] = useState('')
   const [activeRunStatus, setActiveRunStatus] = useState<RunStatus | ''>('')
   const [runResponse, setRunResponse] = useState<string>('')
+  const [runLogs, setRunLogs] = useState<
+    Array<{
+      id: string
+      level: string
+      message: string
+      created_at: string
+    }>
+  >([])
   const [runLogsResponse, setRunLogsResponse] = useState<string>('')
 
   const apiBaseUrl = useMemo(() => getApiBaseUrl(), [])
@@ -265,7 +274,7 @@ function App() {
     }
   }
 
-  async function onGetRun() {
+  const fetchRun = useCallback(async (options?: { silent?: boolean }) => {
     const runId = activeRunId.trim()
     if (!runId) {
       setError(new Error('Run ID is required before fetching run status.'))
@@ -276,13 +285,15 @@ function App() {
       const response = await getRun(runId)
       setActiveRunStatus(response.run.status)
       setRunResponse(JSON.stringify(response, null, 2))
-      setSuccess('Run fetched.')
+      if (!options?.silent) {
+        setSuccess('Run fetched.')
+      }
     } catch (error) {
       setError(error)
     }
-  }
+  }, [activeRunId])
 
-  async function onGetRunLogs() {
+  const fetchRunLogs = useCallback(async (options?: { silent?: boolean }) => {
     const runId = activeRunId.trim()
     if (!runId) {
       setError(new Error('Run ID is required before fetching run logs.'))
@@ -291,11 +302,22 @@ function App() {
 
     try {
       const response = await getRunLogs(runId)
+      setRunLogs(response.logs)
       setRunLogsResponse(JSON.stringify(response, null, 2))
-      setSuccess('Run logs fetched.')
+      if (!options?.silent) {
+        setSuccess('Run logs fetched.')
+      }
     } catch (error) {
       setError(error)
     }
+  }, [activeRunId])
+
+  async function onGetRun() {
+    await fetchRun()
+  }
+
+  async function onGetRunLogs() {
+    await fetchRunLogs()
   }
 
   useEffect(() => {
@@ -303,15 +325,33 @@ function App() {
       return
     }
 
-    const interval = window.setInterval(() => {
-      void onGetRun()
-      void onGetRunLogs()
-    }, 3000)
+    let cancelled = false
+    let timeoutId: number | undefined
+
+    const poll = async () => {
+      if (cancelled) {
+        return
+      }
+
+      await fetchRun({ silent: true })
+      await fetchRunLogs({ silent: true })
+
+      if (!cancelled) {
+        timeoutId = window.setTimeout(() => {
+          void poll()
+        }, 3000)
+      }
+    }
+
+    void poll()
 
     return () => {
-      window.clearInterval(interval)
+      cancelled = true
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId)
+      }
     }
-  }, [activeRunId, activeRunStatus])
+  }, [activeRunId, activeRunStatus, fetchRun, fetchRunLogs])
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#1f2435_0%,_#151824_40%,_#0d1019_100%)] px-4 py-10 text-slate-100 sm:px-6">
@@ -641,7 +681,9 @@ function App() {
               {runResponse || 'No run response yet.'}
             </pre>
             <pre className="max-h-48 overflow-auto rounded-md border border-white/10 bg-black/50 p-3 text-xs text-cyan-100">
-              {runLogsResponse || 'No run logs yet.'}
+              {runLogs.length > 0
+                ? runLogs.map((log) => `[${log.level}] ${log.message}`).join('\n')
+                : runLogsResponse || 'No run logs yet.'}
             </pre>
           </div>
         </section>
