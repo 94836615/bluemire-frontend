@@ -1,0 +1,112 @@
+name: Copilot Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+      - staging
+      - dev
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  pull_request_review_comment:
+    types: [created, edited, deleted]
+  issue_comment:
+    types: [created, edited, deleted]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+jobs:
+  copilot-gate:
+    if: github.event_name != 'issue_comment' || github.event.issue.pull_request != null
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Enforce Copilot response and thread replies
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner
+            const repo = context.repo.repo
+            const pullNumber = context.payload.pull_request?.number ?? context.payload.issue?.number
+
+            if (!pullNumber) {
+              core.setFailed('Unable to determine pull request number for Copilot gate.')
+              return
+            }
+
+            const allowedBaseBranches = ['main', 'staging', 'dev']
+            const pull = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: pullNumber
+            })
+
+            if (!allowedBaseBranches.includes(pull.data.base.ref)) {
+              core.notice(`Skipping copilot-gate for base branch '${pull.data.base.ref}'.`)
+              return
+            }
+
+            const copilotBotLogins = new Set(['copilot'])
+            const isCopilot = (user) => {
+              const login = (user?.login ?? '').toLowerCase()
+              return copilotBotLogins.has(login) && user?.type === 'Bot'
+            }
+
+            const reviewComments = await github.paginate(github.rest.pulls.listReviewComments, {
+              owner,
+              repo,
+              pull_number: pullNumber,
+              per_page: 100
+            })
+
+            const issueComments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number: pullNumber,
+              per_page: 100
+            })
+
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner,
+              repo,
+              pull_number: pullNumber,
+              per_page: 100
+            })
+
+            const copilotReviewComments = reviewComments.filter((comment) => isCopilot(comment.user))
+            const copilotIssueComments = issueComments.filter((comment) => isCopilot(comment.user))
+            const copilotReviews = reviews.filter((review) => isCopilot(review.user))
+
+            const copilotSignalCount =
+              copilotReviewComments.length + copilotIssueComments.length + copilotReviews.length
+
+            if (copilotSignalCount === 0) {
+              core.setFailed('Copilot has not responded to this PR yet. Do not merge.')
+              return
+            }
+
+            const topLevelCopilotThreads = copilotReviewComments.filter((comment) => !comment.in_reply_to_id)
+            const unresolvedThreadIds = topLevelCopilotThreads
+              .filter((thread) => {
+                const hasHumanReply = reviewComments.some(
+                  (reply) => reply.in_reply_to_id === thread.id && !isCopilot(reply.user)
+                )
+                return !hasHumanReply
+              })
+              .map((thread) => thread.id)
+
+            if (unresolvedThreadIds.length > 0) {
+              core.setFailed(
+                `Unanswered Copilot review threads found: ${unresolvedThreadIds.join(', ')}. Reply before merge.`
+              )
+              return
+            }
+
+            core.notice(
+              `Copilot gate passed for PR #${pullNumber}. Copilot comments are present and all review threads have replies.`
+            )
