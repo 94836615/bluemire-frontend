@@ -74,6 +74,7 @@ function App() {
       created_at: string
     }>
   >([])
+  const [runLogsRunId, setRunLogsRunId] = useState('')
   const [runLogsResponse, setRunLogsResponse] = useState<string>('')
 
   const apiBaseUrl = useMemo(() => getApiBaseUrl(), [])
@@ -303,6 +304,7 @@ function App() {
     try {
       const response = await getRunLogs(runId)
       setRunLogs(response.logs)
+      setRunLogsRunId(runId)
       if (!options?.silent) {
         setRunLogsResponse(JSON.stringify(response, null, 2))
       }
@@ -313,11 +315,6 @@ function App() {
       setError(error)
     }
   }, [activeRunId, setError, setSuccess])
-
-  useEffect(() => {
-    setRunLogs([])
-    setRunLogsResponse('')
-  }, [activeRunId])
 
   async function onGetRun() {
     await fetchRun()
@@ -688,7 +685,7 @@ function App() {
               {runResponse || 'No run response yet.'}
             </pre>
             <pre className="max-h-48 overflow-auto rounded-md border border-white/10 bg-black/50 p-3 text-xs text-cyan-100">
-              {runLogs.length > 0
+              {runLogs.length > 0 && runLogsRunId === activeRunId
                 ? runLogs.map((log) => `[${log.level}] ${log.message}`).join('\n')
                 : runLogsResponse || 'No run logs yet.'}
             </pre>
