@@ -17,6 +17,7 @@ on:
 permissions:
   contents: read
   pull-requests: read
+  issues: read
 
 jobs:
   copilot-gate:
@@ -38,7 +39,23 @@ jobs:
               return
             }
 
-            const isCopilot = (login) => /copilot/i.test(login ?? '')
+            const allowedBaseBranches = ['main', 'staging', 'dev']
+            const pull = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: pullNumber
+            })
+
+            if (!allowedBaseBranches.includes(pull.data.base.ref)) {
+              core.notice(`Skipping copilot-gate for base branch '${pull.data.base.ref}'.`)
+              return
+            }
+
+            const copilotBotLogins = new Set(['copilot'])
+            const isCopilot = (user) => {
+              const login = (user?.login ?? '').toLowerCase()
+              return copilotBotLogins.has(login) && user?.type === 'Bot'
+            }
 
             const reviewComments = await github.paginate(github.rest.pulls.listReviewComments, {
               owner,
@@ -61,9 +78,9 @@ jobs:
               per_page: 100
             })
 
-            const copilotReviewComments = reviewComments.filter((comment) => isCopilot(comment.user?.login))
-            const copilotIssueComments = issueComments.filter((comment) => isCopilot(comment.user?.login))
-            const copilotReviews = reviews.filter((review) => isCopilot(review.user?.login))
+            const copilotReviewComments = reviewComments.filter((comment) => isCopilot(comment.user))
+            const copilotIssueComments = issueComments.filter((comment) => isCopilot(comment.user))
+            const copilotReviews = reviews.filter((review) => isCopilot(review.user))
 
             const copilotSignalCount =
               copilotReviewComments.length + copilotIssueComments.length + copilotReviews.length
@@ -77,7 +94,7 @@ jobs:
             const unresolvedThreadIds = topLevelCopilotThreads
               .filter((thread) => {
                 const hasHumanReply = reviewComments.some(
-                  (reply) => reply.in_reply_to_id === thread.id && !isCopilot(reply.user?.login)
+                  (reply) => reply.in_reply_to_id === thread.id && !isCopilot(reply.user)
                 )
                 return !hasHumanReply
               })
