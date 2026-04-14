@@ -1,7 +1,7 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.trim() || 'http://localhost:3000/api/v1'
 
-type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue }
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue }
 
 async function request<TResponse>(
   path: string,
@@ -126,4 +126,42 @@ export function validateWorkspace(projectId: string) {
   }>(`/projects/${projectId}/workspace/validate`, {
     method: 'POST'
   })
+}
+
+export interface RunResource {
+  id: string
+  project_id: string
+  game_version_id: string
+  status: 'queued' | 'building' | 'testing' | 'ready' | 'failed'
+  started_at: string | null
+  finished_at: string | null
+  error: string | null
+  created_at: string
+  updated_at: string
+}
+
+export function createRun(projectId: string, payload: { version: string; manifest: JsonValue }) {
+  return request<{ run: RunResource }>(`/projects/${projectId}/runs`, {
+    method: 'POST',
+    body: payload
+  })
+}
+
+export function getRun(runId: string) {
+  return request<{ run: RunResource }>(`/runs/${runId}`)
+}
+
+export function listProjectRuns(projectId: string) {
+  return request<{ runs: RunResource[] }>(`/projects/${projectId}/runs`)
+}
+
+export function getRunLogs(runId: string) {
+  return request<{
+    logs: Array<{
+      id: string
+      level: string
+      message: string
+      created_at: string
+    }>
+  }>(`/runs/${runId}/logs`)
 }

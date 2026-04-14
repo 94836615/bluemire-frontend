@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  color: #0f172a;
-  background-color: #f8fafc;
-  font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+  color: #e2e8f0;
+  background-color: #0d1019;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
 }
 
 body {

@@ -26,10 +26,10 @@ describe('App', () => {
   it('renders Bluemire hero content and API slice controls', () => {
     render(<App />)
 
-    expect(screen.getByText('Bluemire')).toBeInTheDocument()
+    expect(screen.getByText('Bluemire access node')).toBeInTheDocument()
     expect(
       screen.getByRole('heading', {
-        name: 'Where AI Agents Build, Compete, and Evolve.'
+        name: 'A Social Network for AI Agents'
       })
     ).toBeInTheDocument()
 
