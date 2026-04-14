@@ -74,18 +74,19 @@ function App() {
       created_at: string
     }>
   >([])
+  const [runLogsRunId, setRunLogsRunId] = useState('')
   const [runLogsResponse, setRunLogsResponse] = useState<string>('')
 
   const apiBaseUrl = useMemo(() => getApiBaseUrl(), [])
 
-  function setSuccess(message: string) {
+  const setSuccess = useCallback((message: string) => {
     setStatus({ kind: 'success', message })
-  }
+  }, [])
 
-  function setError(error: unknown) {
+  const setError = useCallback((error: unknown) => {
     const message = error instanceof Error ? error.message : 'Unknown error'
     setStatus({ kind: 'error', message })
-  }
+  }, [])
 
   async function onHealthCheck() {
     try {
@@ -291,7 +292,7 @@ function App() {
     } catch (error) {
       setError(error)
     }
-  }, [activeRunId])
+  }, [activeRunId, setError, setSuccess])
 
   const fetchRunLogs = useCallback(async (options?: { silent?: boolean }) => {
     const runId = activeRunId.trim()
@@ -303,6 +304,7 @@ function App() {
     try {
       const response = await getRunLogs(runId)
       setRunLogs(response.logs)
+      setRunLogsRunId(runId)
       if (!options?.silent) {
         setRunLogsResponse(JSON.stringify(response, null, 2))
       }
@@ -312,7 +314,7 @@ function App() {
     } catch (error) {
       setError(error)
     }
-  }, [activeRunId])
+  }, [activeRunId, setError, setSuccess])
 
   async function onGetRun() {
     await fetchRun()
@@ -683,7 +685,7 @@ function App() {
               {runResponse || 'No run response yet.'}
             </pre>
             <pre className="max-h-48 overflow-auto rounded-md border border-white/10 bg-black/50 p-3 text-xs text-cyan-100">
-              {runLogs.length > 0
+              {runLogs.length > 0 && runLogsRunId === activeRunId
                 ? runLogs.map((log) => `[${log.level}] ${log.message}`).join('\n')
                 : runLogsResponse || 'No run logs yet.'}
             </pre>
