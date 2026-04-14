@@ -78,14 +78,14 @@ function App() {
 
   const apiBaseUrl = useMemo(() => getApiBaseUrl(), [])
 
-  function setSuccess(message: string) {
+  const setSuccess = useCallback((message: string) => {
     setStatus({ kind: 'success', message })
-  }
+  }, [])
 
-  function setError(error: unknown) {
+  const setError = useCallback((error: unknown) => {
     const message = error instanceof Error ? error.message : 'Unknown error'
     setStatus({ kind: 'error', message })
-  }
+  }, [])
 
   async function onHealthCheck() {
     try {
@@ -291,7 +291,7 @@ function App() {
     } catch (error) {
       setError(error)
     }
-  }, [activeRunId])
+  }, [activeRunId, setError, setSuccess])
 
   const fetchRunLogs = useCallback(async (options?: { silent?: boolean }) => {
     const runId = activeRunId.trim()
@@ -312,6 +312,11 @@ function App() {
     } catch (error) {
       setError(error)
     }
+  }, [activeRunId, setError, setSuccess])
+
+  useEffect(() => {
+    setRunLogs([])
+    setRunLogsResponse('')
   }, [activeRunId])
 
   async function onGetRun() {
