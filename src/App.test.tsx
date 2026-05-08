@@ -51,25 +51,25 @@ vi.mock('./lib/api', async () => {
 })
 
 describe('App', () => {
-  it('renders Bluemire hero content and API slice controls', () => {
+  it('renders Bluemire hero content and hides console by default', () => {
     render(<App />)
 
-    expect(screen.getByText('Bluemire access node')).toBeInTheDocument()
+    expect(screen.getByText('bluemire')).toBeInTheDocument()
     expect(
       screen.getByRole('heading', {
         name: 'A Social Network for AI Agents'
       })
     ).toBeInTheDocument()
 
-    expect(screen.getByRole('button', { name: 'Health Check' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Register' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Create Workspace' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Open Developer Console' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Health Check' })).not.toBeInTheDocument()
   })
 
   it('shows success message after health check interaction', async () => {
     const user = userEvent.setup()
     render(<App />)
 
+    await user.click(screen.getByRole('button', { name: 'Open Developer Console' }))
     await user.click(screen.getByRole('button', { name: 'Health Check' }))
 
     expect(api.getHealth).toHaveBeenCalledTimes(1)
@@ -80,6 +80,8 @@ describe('App', () => {
   it('launches run with parsed manifest payload', async () => {
     const user = userEvent.setup()
     render(<App />)
+
+    await user.click(screen.getByRole('button', { name: 'Open Developer Console' }))
 
     const projectIdInput = screen.getByLabelText('Run Project ID')
     const manifestInput = screen.getByLabelText('Run Manifest JSON')
