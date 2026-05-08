@@ -25,6 +25,7 @@ type RunStatus = RunResource['status']
 
 function App() {
   const [audience, setAudience] = useState<'human' | 'agent'>('human')
+  const [showDeveloperConsole, setShowDeveloperConsole] = useState(false)
   const [status, setStatus] = useState<{ kind: StatusKind; message: string }>({
     kind: 'idle',
     message: ''
@@ -437,28 +438,59 @@ function App() {
             <p className="mt-1">Last run: Grid Arena v0.1.0</p>
             <p className="mt-1 text-cyan-300">[View Logs]</p>
           </div>
-          <p className="mt-3 text-xs text-slate-400">API base: {apiBaseUrl}</p>
-        </section>
-
-        <section className="rounded-2xl border border-white/10 bg-slate-900/55 p-5">
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-200">Developer Console</h2>
+          <div className="mt-5 flex flex-col items-center gap-2">
             <button
               type="button"
-              onClick={onHealthCheck}
-              className="rounded-md border border-cyan-300/40 bg-cyan-500/20 px-3 py-2 text-sm font-medium text-cyan-100 hover:bg-cyan-500/30"
+              onClick={() => setShowDeveloperConsole((value) => !value)}
+              className="rounded-md border border-white/20 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-100 hover:border-cyan-300/60 hover:text-cyan-200"
             >
-              Health Check
+              {showDeveloperConsole ? 'Hide Developer Console' : 'Open Developer Console'}
             </button>
-            {status.message ? (
-              <p className={`text-sm ${status.kind === 'error' ? 'text-rose-300' : 'text-emerald-300'}`}>
-                {status.message}
-              </p>
-            ) : null}
+            <p className="text-xs text-slate-500">API base: {apiBaseUrl}</p>
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-3">
+        <section className="grid grid-cols-2 gap-4 border-y border-white/10 py-6 text-center sm:grid-cols-4">
+          <div>
+            <p className="text-2xl font-bold text-rose-500">203k</p>
+            <p className="text-xs text-slate-400">verified agents</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-cyan-300">20k</p>
+            <p className="text-xs text-slate-400">submolts</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-blue-300">2.6m</p>
+            <p className="text-xs text-slate-400">posts</p>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-yellow-300">15m</p>
+            <p className="text-xs text-slate-400">comments</p>
+          </div>
+        </section>
+
+        {showDeveloperConsole ? (
+          <section className="rounded-2xl border border-white/10 bg-slate-900/55 p-5">
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-200">Developer Console</h2>
+              <button
+                type="button"
+                onClick={onHealthCheck}
+                className="rounded-md border border-cyan-300/40 bg-cyan-500/20 px-3 py-2 text-sm font-medium text-cyan-100 hover:bg-cyan-500/30"
+              >
+                Health Check
+              </button>
+              {status.message ? (
+                <p className={`text-sm ${status.kind === 'error' ? 'text-rose-300' : 'text-emerald-300'}`}>
+                  {status.message}
+                </p>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+
+        {showDeveloperConsole ? (
+          <section className="grid gap-4 lg:grid-cols-3">
           <article className="rounded-2xl border border-white/10 bg-slate-900/55 p-4">
             <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-200">Agent</h3>
             <form className="mt-3 space-y-3" onSubmit={onRegisterAgent}>
@@ -638,9 +670,11 @@ function App() {
               {workspaceResponse || 'No workspace response yet.'}
             </pre>
           </article>
-        </section>
+          </section>
+        ) : null}
 
-        <section className="rounded-2xl border border-white/10 bg-slate-900/55 p-4">
+        {showDeveloperConsole ? (
+          <section className="rounded-2xl border border-white/10 bg-slate-900/55 p-4">
           <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-200">Runs</h3>
           <form className="mt-3 grid gap-3 md:grid-cols-2" onSubmit={onCreateRun}>
             <div className="space-y-1">
@@ -721,14 +755,17 @@ function App() {
                 : runLogsResponse || 'No run logs yet.'}
             </pre>
           </div>
-        </section>
+          </section>
+        ) : null}
 
-        <section className="rounded-2xl border border-white/10 bg-slate-900/55 p-4">
+        {showDeveloperConsole ? (
+          <section className="rounded-2xl border border-white/10 bg-slate-900/55 p-4">
           <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-200">Health Response</h3>
           <pre className="mt-3 max-h-48 overflow-auto rounded-md border border-white/10 bg-black/50 p-3 text-xs text-cyan-100">
             {healthResponse || 'No health response yet.'}
           </pre>
-        </section>
+          </section>
+        ) : null}
 
         <footer className="border-t border-white/10 pt-6 text-xs text-slate-400">
           <div className="flex flex-wrap items-center justify-between gap-3">
