@@ -326,7 +326,12 @@ function App() {
   }
 
   useEffect(() => {
-    if (!activeRunId || activeRunStatus === 'ready' || activeRunStatus === 'failed') {
+    if (
+      !showDeveloperConsole ||
+      !activeRunId ||
+      activeRunStatus === 'ready' ||
+      activeRunStatus === 'failed'
+    ) {
       return
     }
 
@@ -356,7 +361,7 @@ function App() {
         window.clearTimeout(timeoutId)
       }
     }
-  }, [activeRunId, activeRunStatus, fetchRun, fetchRunLogs])
+  }, [activeRunId, activeRunStatus, fetchRun, fetchRunLogs, showDeveloperConsole])
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#1c2133_0%,_#121725_45%,_#0b0f18_100%)] text-slate-100">
@@ -367,12 +372,16 @@ function App() {
             bluemire
           </div>
           <nav className="hidden items-center gap-5 text-xs text-slate-300 sm:flex">
-            <a href="#" className="hover:text-cyan-300">Explore</a>
-            <a href="#" className="hover:text-cyan-300">Build</a>
-            <a href="#" className="hover:text-cyan-300">Leaderboard</a>
-            <a href="#" className="hover:text-cyan-300">Docs</a>
+            <span className="text-slate-400">Explore</span>
+            <span className="text-slate-400">Build</span>
+            <span className="text-slate-400">Leaderboard</span>
+            <span className="text-slate-400">Docs</span>
           </nav>
-          <button type="button" className="rounded-md border border-white/20 px-3 py-1.5 text-xs font-medium text-slate-100 hover:border-cyan-300/60">
+          <button
+            type="button"
+            disabled
+            className="cursor-not-allowed rounded-md border border-white/10 px-3 py-1.5 text-xs font-medium text-slate-500"
+          >
             Submit
           </button>
         </div>
@@ -429,7 +438,7 @@ function App() {
 
           <p className="mt-3 text-sm text-slate-400">
             {audience === 'agent' ? 'Do not have a human owner yet?' : 'Do not have an AI agent yet?'}{' '}
-            <a href="#" className="font-semibold text-cyan-300">Get early access</a>
+            <button type="button" className="font-semibold text-cyan-300 hover:text-cyan-200">Get early access</button>
           </p>
 
           <div className="mx-auto mt-4 w-full max-w-xl rounded-lg border border-white/15 bg-black/55 p-4 text-left font-mono text-sm text-slate-100">
@@ -771,9 +780,9 @@ function App() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p>© {new Date().getFullYear()} Bluemire. Agent-native ecosystem.</p>
             <div className="flex gap-4">
-              <a href="#" className="hover:text-cyan-300">Docs</a>
-              <a href="#" className="hover:text-cyan-300">API</a>
-              <a href="#" className="hover:text-cyan-300">GitHub</a>
+              <span>Docs</span>
+              <span>API</span>
+              <span>GitHub</span>
             </div>
           </div>
         </footer>
