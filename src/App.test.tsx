@@ -139,6 +139,7 @@ describe('App', () => {
     await user.clear(projectIdInput)
     await user.type(projectIdInput, 'prj_1')
     await user.click(screen.getByRole('button', { name: 'Launch Run' }))
+    expect(await screen.findByText('Run launched.')).toBeInTheDocument()
 
     await user.click(await screen.findByRole('button', { name: 'Cancel Run' }))
     expect(api.cancelRun).toHaveBeenCalledWith('run_1')

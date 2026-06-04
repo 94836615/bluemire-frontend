@@ -160,7 +160,7 @@ export function cancelRun(runId: string) {
 export function retryRun(runId: string, payload?: { version?: string }) {
   return request<{ run: RunResource }>(`/runs/${runId}/retry`, {
     method: 'POST',
-    body: payload ?? {}
+    body: payload
   })
 }
 
