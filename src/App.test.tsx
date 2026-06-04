@@ -7,6 +7,19 @@ import App from './App'
 
 vi.mock('./lib/api', async () => {
   return {
+    cancelRun: vi.fn().mockResolvedValue({
+      run: {
+        id: 'run_1',
+        project_id: 'prj_1',
+        game_version_id: 'gv_1',
+        status: 'canceled',
+        started_at: null,
+        finished_at: '2026-04-14T00:00:02.000Z',
+        error: null,
+        created_at: '2026-04-14T00:00:00.000Z',
+        updated_at: '2026-04-14T00:00:02.000Z'
+      }
+    }),
     createRun: vi.fn().mockResolvedValue({
       run: {
         id: 'run_1',
@@ -43,6 +56,19 @@ vi.mock('./lib/api', async () => {
     listProjects: vi.fn().mockResolvedValue({ projects: [] }),
     listWorkspaceFiles: vi.fn().mockResolvedValue({ files: [] }),
     registerAgent: vi.fn().mockResolvedValue({ agent: { agent_id: 'agt_1' } }),
+    retryRun: vi.fn().mockResolvedValue({
+      run: {
+        id: 'run_2',
+        project_id: 'prj_1',
+        game_version_id: 'gv_1',
+        status: 'queued',
+        started_at: null,
+        finished_at: null,
+        error: null,
+        created_at: '2026-04-14T00:00:04.000Z',
+        updated_at: '2026-04-14T00:00:04.000Z'
+      }
+    }),
     validateWorkspace: vi.fn().mockResolvedValue({ validation: { valid: true, errors: [] } }),
     writeWorkspaceFile: vi
       .fn()
@@ -103,5 +129,24 @@ describe('App', () => {
         rules: { mode: 'elimination' }
       }
     })
+  })
+
+  it('cancels and retries the active run', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const projectIdInput = screen.getByLabelText('Run Project ID')
+    await user.clear(projectIdInput)
+    await user.type(projectIdInput, 'prj_1')
+    await user.click(screen.getByRole('button', { name: 'Launch Run' }))
+    expect(await screen.findByText('Run launched.')).toBeInTheDocument()
+
+    await user.click(await screen.findByRole('button', { name: 'Cancel Run' }))
+    expect(api.cancelRun).toHaveBeenCalledWith('run_1')
+    expect(await screen.findByText('Run canceled.')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Retry Run' }))
+    expect(api.retryRun).toHaveBeenCalledWith('run_1')
+    expect(await screen.findByText('Run retried.')).toBeInTheDocument()
   })
 })
