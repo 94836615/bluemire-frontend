@@ -132,7 +132,7 @@ export interface RunResource {
   id: string
   project_id: string
   game_version_id: string
-  status: 'queued' | 'building' | 'testing' | 'ready' | 'failed'
+  status: 'queued' | 'building' | 'testing' | 'ready' | 'failed' | 'canceled'
   started_at: string | null
   finished_at: string | null
   error: string | null
@@ -149,6 +149,19 @@ export function createRun(projectId: string, payload: { version: string; manifes
 
 export function getRun(runId: string) {
   return request<{ run: RunResource }>(`/runs/${runId}`)
+}
+
+export function cancelRun(runId: string) {
+  return request<{ run: RunResource }>(`/runs/${runId}/cancel`, {
+    method: 'POST'
+  })
+}
+
+export function retryRun(runId: string, payload?: { version?: string }) {
+  return request<{ run: RunResource }>(`/runs/${runId}/retry`, {
+    method: 'POST',
+    body: payload ?? {}
+  })
 }
 
 export function listProjectRuns(projectId: string) {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import {
+  cancelRun,
   createRun,
   createProject,
   createWorkspace,
@@ -14,6 +15,7 @@ import {
   listProjects,
   listWorkspaceFiles,
   registerAgent,
+  retryRun,
   type JsonValue,
   type RunResource,
   validateWorkspace,
@@ -324,8 +326,50 @@ function App() {
     await fetchRunLogs()
   }
 
+  async function onCancelRun() {
+    const runId = activeRunId.trim()
+    if (!runId) {
+      setError(new Error('Run ID is required before canceling a run.'))
+      return
+    }
+
+    try {
+      const response = await cancelRun(runId)
+      setActiveRunStatus(response.run.status)
+      setRunResponse(JSON.stringify(response, null, 2))
+      setSuccess('Run canceled.')
+    } catch (error) {
+      setError(error)
+    }
+  }
+
+  async function onRetryRun() {
+    const runId = activeRunId.trim()
+    if (!runId) {
+      setError(new Error('Run ID is required before retrying a run.'))
+      return
+    }
+
+    try {
+      const response = await retryRun(runId)
+      setActiveRunId(response.run.id)
+      setActiveRunStatus(response.run.status)
+      setRunResponse(JSON.stringify(response, null, 2))
+      setRunLogs([])
+      setRunLogsResponse('')
+      setSuccess('Run retried.')
+    } catch (error) {
+      setError(error)
+    }
+  }
+
   useEffect(() => {
-    if (!activeRunId || activeRunStatus === 'ready' || activeRunStatus === 'failed') {
+    if (
+      !activeRunId ||
+      activeRunStatus === 'ready' ||
+      activeRunStatus === 'failed' ||
+      activeRunStatus === 'canceled'
+    ) {
       return
     }
 
@@ -674,6 +718,20 @@ function App() {
                 className="rounded-md border border-white/20 px-3 py-2 text-sm text-slate-100"
               >
                 Get Run Logs
+              </button>
+              <button
+                type="button"
+                onClick={onCancelRun}
+                className="rounded-md border border-rose-300/40 px-3 py-2 text-sm text-rose-100"
+              >
+                Cancel Run
+              </button>
+              <button
+                type="button"
+                onClick={onRetryRun}
+                className="rounded-md border border-cyan-300/40 px-3 py-2 text-sm text-cyan-100"
+              >
+                Retry Run
               </button>
             </div>
           </form>
